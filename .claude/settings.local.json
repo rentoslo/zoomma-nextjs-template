@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx --version)",
+      "Bash(npx bmad-method@latest install)",
+      "Bash(uv --version)",
+      "Bash(py --version)",
+      "Bash(uvx --from git+https://github.com/github/spec-kit.git specify init . --ai claude --script ps)",
+      "Bash(PYTHONUTF8=1 PYTHONIOENCODING=utf-8 uvx --from git+https://github.com/github/spec-kit.git specify init . --ai claude --script ps)",
+      "Bash(npm install *)",
+      "Bash(node -e \"require\\('@google/generative-ai'\\)\")",
+      "WebSearch",
+      "WebFetch(domain:docs.runcomfy.com)",
+      "WebFetch(domain:comfyui-guides.runcomfy.com)",
+      "WebFetch(domain:documenter.getpostman.com)",
+      "Bash(git add *)"
+    ]
+  }
+}

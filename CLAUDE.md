@@ -1,4 +1,4 @@
-# [NOME DO PROJETO] — Contexto para Claude Code
+# arquiteto_projetos — Contexto para Claude Code
 
 ---
 
@@ -106,18 +106,22 @@ Todas estão em `.env.local` (local) e no Vercel (produção):
 - `RESEND_TO_EMAIL`
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_CHAT_ID`
-- `GOOGLE_SERVICE_ACCOUNT_JSON` (se usar Vertex AI / Gemini)
-- `GOOGLE_CLOUD_PROJECT` (se usar Vertex AI / Gemini)
-- `GOOGLE_CLOUD_LOCATION` (se usar Vertex AI / Gemini)
+- `GOOGLE_AI_API_KEY` (Gemini Flash — Agente Gerador de Posts)
+- `GOOGLE_SERVICE_ACCOUNT_JSON` (se usar Vertex AI / Gemini via Vertex)
+- `GOOGLE_CLOUD_PROJECT` (se usar Vertex AI / Gemini via Vertex)
+- `GOOGLE_CLOUD_LOCATION` (se usar Vertex AI / Gemini via Vertex)
+- `META_MCP_ACCESS_TOKEN` (Meta Ads MCP Server — Agente Campanhas Meta)
 
 ---
 
 ## Modelos de IA disponíveis
 
-- `claude-opus-4-7`   → máxima qualidade Anthropic
-- `claude-sonnet-4-6` → equilíbrio custo/qualidade (modelo atual)
-- `gpt-4o`            → OpenAI máxima qualidade
-- `gpt-4o-mini`       → OpenAI rápido e econômico
+- `claude-opus-4-7`              → máxima qualidade Anthropic
+- `claude-sonnet-4-6`            → equilíbrio custo/qualidade (modelo atual)
+- `gpt-4o`                       → OpenAI máxima qualidade
+- `gpt-4o-mini`                  → OpenAI rápido e econômico
+- `gemini-2.5-pro` (ou superior) → geração de texto/posts via Google (sempre usar o melhor Pro disponível)
+- `gemini-3-pro-image-preview`   → **PADRÃO para geração de imagens** (maior qualidade disponível; suporta Batch API async)
 
 ---
 
@@ -157,7 +161,91 @@ src/
 | Spec-Kit | `.claude/skills/speckit-*` e `.specify/` | Spec-driven development e rastreabilidade |
 | Antigravity Kit | `.agent/skills/` | Mesmo fluxo no Google Gemini CLI |
 
+---
+
+## Protocolo de troca de agente (obrigatório)
+
+Quando trabalhando em implementação, sempre haverá um **agente ativo** declarado. As regras abaixo evitam que mudanças sejam aplicadas no lugar errado.
+
+### Regra de contexto explícito
+- Antes de qualquer implementação, declaro: `[AGENTE ATIVO: <nome>]`
+- Toda mudança de código é feita exclusivamente dentro da pasta `agents/<nome-do-agente>/`
+- Se o usuário pedir algo sem especificar o agente, **pergunto antes de agir**: "Isso é para o [agente atual] ou para outro?"
+
+### Regra de troca explícita
+- Para trocar de agente ativo, o usuário diz: "muda para o agente X" ou "agora vamos trabalhar no agente X"
+- Eu confirmo: `[ENCERRANDO: <agente anterior>] → [AGENTE ATIVO: <novo agente>]`
+- Só então aplico qualquer instrução ao novo agente
+
+### Regra de escopo de instrução
+- Instrução dada enquanto Agente A está ativo → aplicada SOMENTE ao Agente A
+- Instrução genérica que parece afetar vários agentes → pergunto se vai para `shared/` ou para um agente específico
+- Nunca assumo — sempre confirmo quando houver ambiguidade
+
+### O que acontece se eu me confundir
+- Se o usuário detectar que apliquei no agente errado, diz "errou o agente" e eu desfaço imediatamente
+- Mantenho o histórico de qual agente estava ativo antes da troca para poder reverter
+
+---
+
+## Regra de especialização de agentes (INVIOLÁVEL)
+
+**Um agente = uma responsabilidade.**
+
+Se a descrição de um agente contém a palavra "e" ligando duas funções distintas, ele já deve ser dois agentes separados.
+
+**Exemplos do que viola a regra:**
+- "Agente que faz briefing E mantém biblioteca de marca" → dois agentes
+- "Agente que gera texto E gera imagem" → dois agentes
+- "Agente que prospecta no Instagram E no Google Maps" → dois agentes
+
+**Como aplicar:**
+- Ao criar um novo agente, Claude deve verificar se ele tem exatamente uma responsabilidade
+- Se o usuário pedir um agente que claramente faz duas coisas, Claude propõe a separação antes de implementar
+- Cada agente deve conseguir ser descrito em uma frase sem conjunção aditiva ("e", "além de", "também")
+
+**Por que existe esta regra:** agente especializado é mais fácil de calibrar, testar, substituir e melhorar. Agente generalista vira caixa-preta impossível de manter.
+
+---
+
+## Regras anti-Frankenstein (INVIOLÁVEIS)
+
+Estas regras existem para garantir que o sistema nunca se torne um monstro impossível de manter. Elas têm prioridade sobre qualquer pedido de implementação.
+
+### Regra 1 — Compartilhado vai para `shared/`. Exclusivo fica no agente.
+Se uma lógica vai ser usada em 2 ou mais agentes, ela pertence a `shared/`. Se é usada só em 1, fica dentro da pasta do próprio agente. Nunca duplicar código entre agentes — duplicação é o primeiro sinal de Frankenstein.
+
+### Regra 2 — Agente nunca importa outro agente.
+Nenhum arquivo dentro de `agents/X/` pode conter `import` de `agents/Y/`. A comunicação entre agentes acontece EXCLUSIVAMENTE via tabela `tasks` no Supabase. Se você ver ou pedir um `import` direto entre agentes, é Frankenstein nascendo.
+
+### Regra 3 — Fase fechada antes de abrir a próxima.
+Nenhum agente novo da Fase N+1 começa enquanto os agentes da Fase N tiverem dívidas técnicas, bugs conhecidos ou comportamento instável. Velocidade falsa agora = custo real depois.
+
+### O que acontece se o usuário pedir algo que viola estas regras
+
+1. **Recuso executar diretamente.** Não implemento o que foi pedido sem antes sinalizar o conflito.
+2. **Explico qual regra está sendo violada e por quê ela existe.** Sem jargão — linguagem direta.
+3. **Proponho uma alternativa que resolve o mesmo problema sem quebrar a regra.**
+4. **Só avanço com a abordagem original se o usuário confirmar explicitamente** que entendeu o risco e quer prosseguir assim mesmo.
+
+O usuário tem sempre a palavra final — mas nunca toma a decisão sem saber o que está em jogo.
+
 <!-- SPECKIT START -->
+**Active feature**: `001-inteligencia-marca` (branch `001-inteligencia-marca`)
+
+**Implementation plan**: [specs/001-inteligencia-marca/plan.md](specs/001-inteligencia-marca/plan.md)
+
+**Supporting artifacts**:
+- Spec: [specs/001-inteligencia-marca/spec.md](specs/001-inteligencia-marca/spec.md)
+- Research: [specs/001-inteligencia-marca/research.md](specs/001-inteligencia-marca/research.md)
+- Data model: [specs/001-inteligencia-marca/data-model.md](specs/001-inteligencia-marca/data-model.md)
+- Contracts: [specs/001-inteligencia-marca/contracts/](specs/001-inteligencia-marca/contracts/)
+- Quickstart: [specs/001-inteligencia-marca/quickstart.md](specs/001-inteligencia-marca/quickstart.md)
+
+**Source-of-truth docs**:
+- Business: [docs/inteligencia-marca-overview.md](docs/inteligencia-marca-overview.md)
+- Architecture: [docs/inteligencia-marca-arquitetura.md](docs/inteligencia-marca-arquitetura.md)
+
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read the current plan
+shell commands, and other important information, read the current plan.
 <!-- SPECKIT END -->

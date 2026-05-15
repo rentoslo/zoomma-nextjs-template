@@ -127,6 +127,8 @@ Todas estão em `.env.local` (local) e no Vercel (produção):
 
 ## Arquitetura de pastas
 
+### Template (estrutura para novos projetos)
+
 ```
 src/
 ├── app/           → páginas e API routes (Next.js App Router)
@@ -141,6 +143,37 @@ src/
 │   └── utils.ts   → função cn() para Tailwind
 └── types/         → interfaces TypeScript do projeto
 ```
+
+### Implementação real (Inteligência de Marca)
+
+O código da feature `001-inteligencia-marca` vive em `C:\github\zoomma_automations` (repo separado, npm workspaces).
+
+```
+zoomma_automations/
+├── shared/                       → módulos compartilhados (regra anti-Frankenstein)
+│   ├── brand-library/            → extração + manutenção da Biblioteca de Marca
+│   ├── knowledge-base/           → curadoria + busca Tavily + prompts
+│   ├── decision-inbox/           → notificação Telegram + helpers da Caixa
+│   ├── briefing/                 → extração das 12 perguntas-âncora
+│   ├── telegram/                 → cliente bot + comandos + dispatch
+│   ├── supabase.ts               → cliente único (service_role) usado por todos
+│   ├── llm.ts                    → cliente Anthropic Claude
+│   └── auditor.ts                → revisão automática de outputs de IA
+│
+├── controller/src/app/           → painel web Next.js 14
+│   ├── (dashboard)/              → UI interna Zoomma (clientes, caixa, biblioteca)
+│   └── api/
+│       ├── clients/              → CRUD de clientes
+│       ├── decisions/[id]/       → aprovar/rejeitar Caixa de Decisões
+│       ├── knowledge/            → busca + upload manual
+│       ├── cron/                 → workers (auto-link-knowledge, drift-detection)
+│       └── telegram/webhook/     → recebe mensagens do bot
+│
+├── agents/_template              → esqueleto para futuros agentes isolados
+└── supabase/migrations/          → SQL versionado (001 → 005)
+```
+
+**Convenção:** comunicação entre módulos do `shared/` é via funções diretas. Comunicação entre agentes (quando existirem em `agents/`) é via tabela `tasks` no Supabase — nunca import direto.
 
 ---
 

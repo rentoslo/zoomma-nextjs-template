@@ -1,0 +1,21 @@
+{
+  "ciclo": 1,
+  "criado_em": "2026-05-19",
+  "descricao": "Log de uso das fotos do banco fotos_avatar/. Auto-gerenciado pelo helper scripts/lib/foto_rotation.mjs. Cada entrada registra: foto, ciclo em que foi usada, data, nome do post e script gerador. Quando o ciclo vira (todas usadas), o helper alerta para adicionar novas fotos.",
+  "uso": [
+    {
+      "foto": "IMG_3629.jpg",
+      "ciclo": 1,
+      "usada_em": "2026-05-19",
+      "post": "B1_oleo_retrato_camila",
+      "script": "teste_camila_cat3_silencio_premium.mjs"
+    },
+    {
+      "foto": "IMG_3645.jpg",
+      "ciclo": 1,
+      "usada_em": "2026-05-19",
+      "post": "C1_macro_pele_gota",
+      "script": "teste_camila_cat3_silencio_premium.mjs"
+    }
+  ]
+}

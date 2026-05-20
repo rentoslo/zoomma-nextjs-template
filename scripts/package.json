@@ -1,0 +1,14 @@
+{
+  "name": "zoomma-image-gen",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "Scripts de geração de imagem via Gemini 3 Pro Image (Nano Banana Pro) para o cliente Zoomma",
+  "scripts": {
+    "gerar:teste": "node gerar_posts_teste_zoomma.mjs"
+  },
+  "dependencies": {
+    "@google/genai": "^1.0.0",
+    "dotenv": "^16.4.5"
+  }
+}

@@ -13,7 +13,9 @@
       "WebFetch(domain:docs.runcomfy.com)",
       "WebFetch(domain:comfyui-guides.runcomfy.com)",
       "WebFetch(domain:documenter.getpostman.com)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }
